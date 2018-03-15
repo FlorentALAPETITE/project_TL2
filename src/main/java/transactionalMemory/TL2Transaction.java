@@ -10,7 +10,7 @@ import java.util.HashMap;
 class TL2Transaction implements ITransaction {
 
 	private static AtomicInteger CLOCK_ = new AtomicInteger(0);
-	private final Integer birthDate_;
+	private Integer birthDate_;
 	private Integer commitDate_;
 	private Set<IRegister> lrst_; // ensemble des variables lues
 	private Set<IRegister> lwst_; // ensemble des variables écrite
@@ -19,7 +19,7 @@ class TL2Transaction implements ITransaction {
 	public TL2Transaction(){
 		lrst_ = new HashSet<IRegister>();
 		lwst_ = new HashSet<IRegister>();
-		lcx_ = new HashMap<IRegister, IRegister>();
+		lcx_ = new HashMap<Integer, IRegister>();
 	}
 
 	public void begin(){
@@ -47,7 +47,7 @@ class TL2Transaction implements ITransaction {
 
 
 		for (IRegister varWritten: this.lwst_){
-			varWritten = update(lcx_.get(varWritten.hashCode()).getValue(), this.commitDate_);
+			varWritten.update(lcx_.get(varWritten.hashCode()).getValue(), this.commitDate_);
 		}
 
 		// release all locks
@@ -63,15 +63,15 @@ class TL2Transaction implements ITransaction {
 
 	// inside package, add and get variables read and written
 	public void addInWrittenSet(IRegister o){
-			this.lwst_.add(o);
-			this.lcx_.put(o.hashCode(), o);
+		this.lwst_.add(o);
+		this.lcx_.put(o.hashCode(), o);
 	}
 	public void addInReadSet(IRegister o){
-			this.lrst_.add(o);
-			this.lcx_.put(o.hashCode(), o);
+		this.lrst_.add(o);
+		this.lcx_.put(o.hashCode(), o);
 	}
 	public IRegister getLocalRegisterCopy(int hashCode){
-			this.lcx_.get(hashCode);
+		return this.lcx_.get(hashCode);
 	}
 
 	// getters
