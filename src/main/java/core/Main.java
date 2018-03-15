@@ -15,6 +15,7 @@ public class Main {
     }
 
     void increment(IRegister<Integer> X){
+    	Transaction t = new Transaction();
     	while (!t.isCommited()){
     		try{
     			t.begin();
