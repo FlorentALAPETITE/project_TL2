@@ -1,7 +1,6 @@
 package transactionalMemory;
 
-public interface ITransaction {
-	public void begin();
-	public void try_to_commit() throws AbortException;
-	public boolean isCommited();
+public interface IRegister<T> {
+	public T read(ITransaction t) throws AbortException;
+	public void write(ITransaction t, T v) throws AbortException;
 }
