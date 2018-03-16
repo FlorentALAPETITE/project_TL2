@@ -14,6 +14,7 @@ public class Register<T> implements IRegister<T>{
 	public Register(T value){
 		lock_ = new ReentrantLock();
 		value_= value;
+		date_ = -1;
 	}
 
 	public T read(ITransaction t) throws AbortException{

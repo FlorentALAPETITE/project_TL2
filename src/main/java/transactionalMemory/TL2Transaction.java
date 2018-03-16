@@ -7,7 +7,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.HashMap;
 
-class TL2Transaction implements ITransaction {
+public class TL2Transaction implements ITransaction {
 
 	private static AtomicInteger CLOCK_ = new AtomicInteger(0);
 	private Integer birthDate_;
