@@ -9,7 +9,7 @@ public class Register<T> implements IRegister<T>{
 
 	private ReentrantLock lock_;
 
-	private Integer date_;
+	private volatile Integer date_;
 
 	public Register(T value){
 		lock_ = new ReentrantLock();
@@ -18,21 +18,24 @@ public class Register<T> implements IRegister<T>{
 	}
 
 	public T read(ITransaction t) throws AbortException{
-		Register<T> localCopy = (Register<T>) t.getLocalRegisterCopy(this.hashCode());
+		if(lock_.isLocked()){
+			throw new AbortException("Abort mission");
+		}
+		TL2Transaction.LocalCopy localCopy = t.getLocalRegisterCopy(this.hashCode());
 
 		if (localCopy != null){
-			return localCopy.getValue();
+			return (T) localCopy.getValue();
 		}
 
 		t.addInReadSet(this);
 
-		localCopy = (Register<T>) t.getLocalRegisterCopy(this.hashCode());	
+		localCopy = t.getLocalRegisterCopy(this.hashCode());	
 
 		if(localCopy.getDate() > t.getClockValue()){
 			throw new AbortException("Abort mission");
 		}
 		else{
-			return localCopy.value_;
+			return (T) localCopy.getValue();
 		}
 
 	}
@@ -40,9 +43,11 @@ public class Register<T> implements IRegister<T>{
 	public void write(ITransaction t, T v) throws AbortException{
 		if(lock_.isLocked()){
 			throw new AbortException("Abort mission");
-		}	
-
-		t.addInWrittenSet(this);
+		}
+		if (!t.isInWrittenSet(this.hashCode())){
+			t.addInWrittenSet(this,v);
+		}
+		t.updateLocalRegisterCopy(this.hashCode(), v);
 	
 		
 	}

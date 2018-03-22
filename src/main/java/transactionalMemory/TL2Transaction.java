@@ -9,17 +9,30 @@ import java.util.HashMap;
 
 public class TL2Transaction implements ITransaction {
 
+	class LocalCopy {
+		Object value;
+		final Integer date;
+
+		LocalCopy(Object val, Integer date){
+			this.date = date;
+			this.value = val;
+		}
+
+		public Object getValue(){return value;}
+		public Integer getDate() {return date;}
+	}
+
 	private static AtomicInteger CLOCK_ = new AtomicInteger(0);
 	private Integer birthDate_;
 	private Integer commitDate_;
 	private Set<IRegister> lrst_; // ensemble des variables lues
 	private Set<IRegister> lwst_; // ensemble des variables écrite
-	private Map<Integer, IRegister> lcx_; // ensemble des variables: leur valeur locale
+	private Map<Integer, LocalCopy> lcx_; // ensemble des variables: leur valeur locale
 
 	public TL2Transaction(){
 		lrst_ = new HashSet<IRegister>();
 		lwst_ = new HashSet<IRegister>();
-		lcx_ = new HashMap<Integer, IRegister>();
+		lcx_ = new HashMap<Integer, LocalCopy>();
 	}
 
 	public void begin(){
@@ -35,7 +48,7 @@ public class TL2Transaction implements ITransaction {
 		}
 
 		for (IRegister varRead: this.lrst_){
-			if (varRead.getDate() > this.birthDate_){
+			if (varRead.getDate() >= this.birthDate_){
 				for (IRegister o: allObjects){
 					o.releaseLock();
 				}
@@ -44,8 +57,6 @@ public class TL2Transaction implements ITransaction {
 		}
 
 		this.commitDate_ = CLOCK_.getAndIncrement();
-
-
 		for (IRegister varWritten: this.lwst_){
 			varWritten.update(lcx_.get(varWritten.hashCode()).getValue(), this.commitDate_);
 		}
@@ -62,20 +73,32 @@ public class TL2Transaction implements ITransaction {
 	}
 
 	// inside package, add and get variables read and written
-	public void addInWrittenSet(IRegister o){
+	public void addInWrittenSet(IRegister o, Object v){
 		this.lwst_.add(o);
-		this.lcx_.put(o.hashCode(), o);
+		if (lcx_.containsKey(o.hashCode())){
+			updateLocalRegisterCopy(o.hashCode(), v);
+		} else {
+			this.lcx_.put(o.hashCode(), new LocalCopy(v, o.getDate()));
+		}
 	}
 	public void addInReadSet(IRegister o){
 		this.lrst_.add(o);
-		this.lcx_.put(o.hashCode(), o);
+		if (!lcx_.containsKey(o.hashCode())){
+			this.lcx_.put(o.hashCode(), new LocalCopy(o.getValue(), o.getDate()));
+		}
 	}
-	public IRegister getLocalRegisterCopy(int hashCode){
+	public void updateLocalRegisterCopy(int hashCode, Object v){
+		this.lcx_.get(hashCode).value = v;
+	}
+	public LocalCopy getLocalRegisterCopy(int hashCode){
 		return this.lcx_.get(hashCode);
 	}
 
 	// getters
 	public Integer getClockValue(){
 		return CLOCK_.get();
+	}
+	public boolean isInWrittenSet(int hashCode){
+		return this.lwst_.contains(hashCode);
 	}
 }

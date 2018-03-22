@@ -8,7 +8,7 @@ import java.lang.InterruptedException;
 public class Main {
 
 	private static final int NBR_OF_THREADS = 3;
-	private static final int NBR_OF_INCREMENTS = 10;
+	private static final int NBR_OF_INCREMENTS = 100;
 	
     public static void main( String[] args ){
 
@@ -29,7 +29,6 @@ public class Main {
    			e.printStackTrace();
    		}
    		System.out.println("=== End ===\n\n");
-
 
    		System.out.println("=== Testing for "+NBR_OF_THREADS+" threads to increment "+NBR_OF_INCREMENTS+" times ===");
    		reg = new Register<Integer>(0);
@@ -66,30 +65,38 @@ public class Main {
    		ITransaction t2 = new TL2Transaction();
    		try{
    			t1.begin();
-   			reg.write(t1, 1);
+   			reg.write(t1, reg.read(t1) + 1);
    			t2.begin();
    			reg.write(t2, 2);
-   			t1.try_to_commit();
    			t2.try_to_commit();
+            t1.try_to_commit();
    			System.out.println("Uh ... reading this is not expected, an exception should have been raised");
    		}catch(AbortException e){
    			System.out.println("This Exception was expected : ");
-			e.getMessage();
+			e.printStackTrace();
 		}
+        System.out.println("valeur : "+reg.getValue());
    		System.out.println("=== End ===");
     }
 
     static void increment(IRegister<Integer> X){
     	ITransaction t = new TL2Transaction();
-    	while (!t.isCommited()){
-    		try{
-    			t.begin();
-    			X.write(t, X.read(t) + 1);
+        int onatrouve = -1;
+        int onalaisse = -1;
+        int date = -1;
+        while (!t.isCommited()){
+            try{
+		        t.begin();
+                onatrouve = X.read(t);
+                X.write(t, onatrouve + 1);
+                onalaisse = X.read(t);
+                date = X.getDate();
     			t.try_to_commit();
     		}catch(AbortException e){
-    			e.printStackTrace();
+    			//e.printStackTrace();
     		}
     	}
+        System.out.println("Sucess ! on a trouvé : " + onatrouve + " on a laissé : "+onalaisse+" à la date :"+date+" thread id : "+Thread.currentThread().getId());
 	}
 
 	private static class MyRunnable implements Runnable {
@@ -100,9 +107,12 @@ public class Main {
 		}
 
 		public void run() {
-			for(int i = 0; i>NBR_OF_INCREMENTS; i++){
-				increment(r);
-			}
+			for(int i = 0; i<NBR_OF_INCREMENTS; i++){
+                increment(r);
+                try{
+                    Thread.sleep(10);
+                } catch (InterruptedException e){}
+    		}
 		}
 	}
 }
