@@ -37,6 +37,9 @@ public class TL2Transaction implements ITransaction {
 
 	public void begin(){
 		birthDate_ = CLOCK_.get();
+		lrst_.clear();
+		lwst_.clear();
+		lcx_.clear();
 	}
 
 	public void try_to_commit() throws AbortException {
@@ -46,7 +49,6 @@ public class TL2Transaction implements ITransaction {
 		for (IRegister o: allObjects){
 			o.acquireLock(); // throws AbortException
 		}
-
 		for (IRegister varRead: this.lrst_){
 			if (varRead.getDate() >= this.birthDate_){
 				for (IRegister o: allObjects){

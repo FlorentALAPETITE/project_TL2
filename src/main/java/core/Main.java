@@ -7,8 +7,8 @@ import java.lang.InterruptedException;
 
 public class Main {
 
-	private static final int NBR_OF_THREADS = 3;
-	private static final int NBR_OF_INCREMENTS = 100;
+	private static final int NBR_OF_THREADS = 10;
+	private static final int NBR_OF_INCREMENTS = 1000;
 	
     public static void main( String[] args ){
 
@@ -53,7 +53,7 @@ public class Main {
         try{
         	System.out.println("All threads finished, reading value of register, expecting : "+NBR_OF_THREADS*NBR_OF_INCREMENTS+" and got : "+reg.read(t));
         	System.out.println((reg.read(t) == NBR_OF_THREADS*NBR_OF_INCREMENTS ? "Nice !" : "Well .. I guess something went wrong ..."));
-   		}catch(AbortException e){
+   		}catch(Exception e){
    			e.printStackTrace();
    		}
    		System.out.println("=== End ===\n\n");
@@ -75,28 +75,51 @@ public class Main {
    			System.out.println("This Exception was expected : ");
 			e.printStackTrace();
 		}
-        System.out.println("valeur : "+reg.getValue());
    		System.out.println("=== End ===");
+
+
+        System.out.println("=== Testing multiple write ===");
+        reg = new Register<Integer>(0);
+        t1 = new TL2Transaction();
+        t2 = new TL2Transaction();
+        t1.begin();
+        t2.begin();
+        try{
+            reg.read(t1);
+            reg.write(t2, 2);
+            t2.try_to_commit();
+            reg.write(t1, 6);
+            t1.try_to_commit();
+            System.out.print("première phase : KO...");
+        }catch(AbortException e){System.out.print("première phase : ok!");}
+        try{
+            t1.begin();
+            reg.write(t1, 2);
+            reg.write(t1, 3);
+            reg.write(t1, 4);
+            t1.try_to_commit();
+            if (reg.read(t) == 4){
+                System.out.print("deuxième phase : ok!");           
+            } else {
+                System.out.print("deuxième phase : KO...");
+            }
+        }catch(AbortException e){
+            System.out.println("Oops !");
+        }
+        System.out.println("=== End ===");
     }
 
     static void increment(IRegister<Integer> X){
     	ITransaction t = new TL2Transaction();
-        int onatrouve = -1;
-        int onalaisse = -1;
-        int date = -1;
         while (!t.isCommited()){
             try{
 		        t.begin();
-                onatrouve = X.read(t);
-                X.write(t, onatrouve + 1);
-                onalaisse = X.read(t);
-                date = X.getDate();
+                X.write(t, X.read(t) + 1);
     			t.try_to_commit();
     		}catch(AbortException e){
     			//e.printStackTrace();
     		}
     	}
-        System.out.println("Sucess ! on a trouvé : " + onatrouve + " on a laissé : "+onalaisse+" à la date :"+date+" thread id : "+Thread.currentThread().getId());
 	}
 
 	private static class MyRunnable implements Runnable {
@@ -109,9 +132,6 @@ public class Main {
 		public void run() {
 			for(int i = 0; i<NBR_OF_INCREMENTS; i++){
                 increment(r);
-                try{
-                    Thread.sleep(10);
-                } catch (InterruptedException e){}
     		}
 		}
 	}
