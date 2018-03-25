@@ -46,10 +46,10 @@ public class TL2Transaction implements ITransaction {
 		Set<IRegister> allObjects = new HashSet(lrst_);
 		allObjects.addAll(this.lwst_);
 		// lock all the objects in lrst, lwst
-		for (IRegister o: allObjects){
+		for (IRegister o : allObjects){
 			o.acquireLock(); // throws AbortException
 		}
-		for (IRegister varRead: this.lrst_){
+		for (IRegister varRead : this.lrst_){
 			if (varRead.getDate() >= this.birthDate_){
 				for (IRegister o: allObjects){
 					o.releaseLock();
@@ -64,7 +64,7 @@ public class TL2Transaction implements ITransaction {
 		}
 
 		// release all locks
-		for (IRegister o: allObjects){
+		for (IRegister o : allObjects){
 			o.releaseLock();
 		}
 

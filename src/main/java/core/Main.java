@@ -74,7 +74,7 @@ public class Main {
    		}catch(AbortException e){
    			System.out.println("This Exception was expected : ");
 			e.printStackTrace();
-		}
+	 	}
    		System.out.println("=== End ===");
 
 
@@ -90,8 +90,8 @@ public class Main {
             t2.try_to_commit();
             reg.write(t1, 6);
             t1.try_to_commit();
-            System.out.print("première phase : KO...");
-        }catch(AbortException e){System.out.print("première phase : ok!");}
+            System.out.println("First phase : KO...");
+        }catch(AbortException e){System.out.println("First phase : OK!");}
         try{
             t1.begin();
             reg.write(t1, 2);
@@ -99,14 +99,38 @@ public class Main {
             reg.write(t1, 4);
             t1.try_to_commit();
             if (reg.read(t) == 4){
-                System.out.print("deuxième phase : ok!");           
+                System.out.println("Second phase : OK!");           
             } else {
-                System.out.print("deuxième phase : KO...");
+                System.out.println("Second phase : KO...");
             }
         }catch(AbortException e){
             System.out.println("Oops !");
         }
         System.out.println("=== End ===");
+
+
+        // NOT WORKING
+        System.out.println("=== Testing two transaction with two objects ===");
+        reg = new Register<Integer>(0);
+        Register<Integer> reg2 = new Register<Integer>(100);
+        t1 = new TL2Transaction();
+        t2 = new TL2Transaction();
+        try{
+            t1.begin();
+            t2.begin();            
+            reg.write(t1, 2);
+            reg2.write(t2,5);
+            reg.write(t2, 7);
+            reg2.write(t1,9);
+            reg.write(t1,10);
+            t1.try_to_commit();
+            t2.try_to_commit();
+            System.out.println("Registre 1 : "+ reg.read(t1));
+            System.out.println("Registre 2 : "+ reg2.read(t2));            
+        }catch(AbortException e){
+          e.printStackTrace();
+        }
+
     }
 
     static void increment(IRegister<Integer> X){
@@ -114,7 +138,7 @@ public class Main {
         while (!t.isCommited()){
             try{
 		        t.begin();
-                X.write(t, X.read(t) + 1);
+            X.write(t, X.read(t) + 1);
     			t.try_to_commit();
     		}catch(AbortException e){
     			//e.printStackTrace();
