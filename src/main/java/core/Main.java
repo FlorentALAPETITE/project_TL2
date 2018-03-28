@@ -108,30 +108,35 @@ public class Main {
         }
         System.out.println("=== End ===");
 
-
-        // NOT WORKING
-        System.out.println("=== Testing two transaction with two objects ===");
-        reg = new Register<Integer>(0);
-        Register<Integer> reg2 = new Register<Integer>(100);
-        t1 = new TL2Transaction();
-        t2 = new TL2Transaction();
+      System.out.println("=== Testing for "+NBR_OF_THREADS+" threads to increment "+NBR_OF_INCREMENTS+" times on multiple registers ===");
+      reg = new Register<Integer>(0);
+      reg2 = new Register<Integer>(0);
+      myThreads = new ArrayList<Thread>();
+      System.out.println("Initializing all threads");
+      for(int i=0; i<NBR_OF_THREADS; i++){
+            myThreads.add(new Thread(new OtherRunnable(reg, reg2)));
+        }
+        System.out.println("Launching all threads");
+        for(Thread thread : myThreads){
+            thread.start();
+        }
+        System.out.println("Waiting for all threads to finish ...");
         try{
-            t1.begin();
-            t2.begin();            
-            reg.write(t1, 2);
-            reg2.write(t2,5);
-            reg.write(t2, 7);
-            reg2.write(t1,9);
-            reg.write(t1,10);
-            t1.try_to_commit();
-            t2.try_to_commit();
-            System.out.println("Registre 1 : "+ reg.read(t1));
-            System.out.println("Registre 2 : "+ reg2.read(t2));            
-        }catch(AbortException e){
+          for(Thread thread : myThreads){
+              thread.join();
+          }
+        }catch(InterruptedException e){
           e.printStackTrace();
         }
-
-    }
+        t = new TL2Transaction();
+        try{
+          System.out.println("All threads finished, reading value of register, expecting : "+NBR_OF_THREADS*NBR_OF_INCREMENTS+" and got : "+reg.read(t));
+          System.out.println("All threads finished, reading value of register, expecting : "+NBR_OF_THREADS*NBR_OF_INCREMENTS+" and got : "+reg2.read(t));
+      }catch(Exception e){
+        e.printStackTrace();
+      }
+      System.out.println("=== End ===\n\n");
+  }
 
     static void increment(IRegister<Integer> X){
     	ITransaction t = new TL2Transaction();
@@ -159,4 +164,37 @@ public class Main {
     		}
 		}
 	}
+
+  private static class OtherRunnable implements Runnable {
+    private Register<Integer> reg;
+    private Register<Integer> reg2;
+
+    public OtherRunnable(Register<Integer> reg, Register<Integer> reg2) {
+       this.reg = reg;
+       this.reg2 = reg2;
+    }
+
+    public void run() {
+        TL2Transaction t;
+        for(int i = 0; i<NBR_OF_INCREMENTS; i++){
+            t = new TL2Transaction();
+            while (!t.isCommited()){
+                try{
+                    t.begin();
+                    if (i%2 == 0){
+                        this.reg.write(t, this.reg.read(t) + 1);
+                        this.reg2.write(t, this.reg2.read(t) + 1);
+                    } else {
+                        this.reg.write(t, this.reg.read(t) + 1);
+                        this.reg2.write(t, this.reg2.read(t) + 1);                        
+                    }                   
+
+                    t.try_to_commit();
+                }catch(AbortException e){
+                    //e.printStackTrace();
+                }
+            }
+        }
+    }
+  }
 }

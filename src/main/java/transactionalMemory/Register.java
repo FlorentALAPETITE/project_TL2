@@ -2,14 +2,17 @@ package transactionalMemory;
 
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.lang.Comparable;
 
-public class Register<T> implements IRegister<T>{
+public class Register<T> implements IRegister<T>, Comparable<IRegister>{
 
 	private T value_;
 
 	private ReentrantLock lock_;
 
 	private volatile Integer date_;
+
+	private int locker;
 
 	public Register(T value){
 		lock_ = new ReentrantLock();
@@ -48,19 +51,22 @@ public class Register<T> implements IRegister<T>{
 			t.addInWrittenSet(this,v);
 		}
 		t.updateLocalRegisterCopy(this.hashCode(), v);
-	
-		
 	}
 
-	public void acquireLock() throws AbortException{
+	public void acquireLock(int hashCode) throws AbortException{
 		if(lock_.isLocked()){
 			throw new AbortException("Abort mission");
 		}
 		lock_.lock();
+		this.locker = hashCode;
 	}
 
-	public void releaseLock() throws AbortException{
-		lock_.unlock();
+	public void releaseLock(int hashCode) throws AbortException{
+		if (this.locker == hashCode){
+			lock_.unlock();
+		} else {
+			throw new AbortException("Well tried");
+		}
 	}
 
 	public Integer getDate(){
@@ -75,4 +81,15 @@ public class Register<T> implements IRegister<T>{
 		value_ = value;
 		date_ = date;
 	}
+
+	// Comparable interface -> usefull to TreeSet
+	public int compareTo(IRegister o){
+		if (o==null){throw new NullPointerException();}
+		return this.hashCode() - o.hashCode();
+	}
+
+	// @Override // from Object
+	// public int hashCode(){
+
+	// }
 }

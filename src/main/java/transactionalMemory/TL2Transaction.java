@@ -2,6 +2,8 @@ package transactionalMemory;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.Map;
@@ -43,16 +45,23 @@ public class TL2Transaction implements ITransaction {
 	}
 
 	public void try_to_commit() throws AbortException {
-		Set<IRegister> allObjects = new HashSet(lrst_);
+		SortedSet<IRegister> allObjects = new TreeSet(lrst_);
 		allObjects.addAll(this.lwst_);
 		// lock all the objects in lrst, lwst
 		for (IRegister o : allObjects){
-			o.acquireLock(); // throws AbortException
+			try {
+				o.acquireLock(this.hashCode()); // throws AbortException
+			} catch (AbortException e) {
+				for (IRegister ir: allObjects){
+					try{ir.releaseLock(this.hashCode());} catch (AbortException ex) {}
+				}
+				throw e;
+			}
 		}
 		for (IRegister varRead : this.lrst_){
 			if (varRead.getDate() >= this.birthDate_){
 				for (IRegister o: allObjects){
-					o.releaseLock();
+					o.releaseLock(this.hashCode());
 				}
 				throw new AbortException("Transaction outdated");
 			}
@@ -65,7 +74,7 @@ public class TL2Transaction implements ITransaction {
 
 		// release all locks
 		for (IRegister o : allObjects){
-			o.releaseLock();
+			o.releaseLock(this.hashCode());
 		}
 
 	}
