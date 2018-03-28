@@ -4,6 +4,7 @@ import transactionalMemory.*;
 import java.util.List;
 import java.util.ArrayList;
 import java.lang.InterruptedException;
+import java.util.Date;
 
 public class Main {
 
@@ -92,6 +93,7 @@ public class Main {
             t1.try_to_commit();
             System.out.println("First phase : KO...");
         }catch(AbortException e){System.out.println("First phase : OK!");}
+        
         try{
             t1.begin();
             reg.write(t1, 2);
@@ -103,17 +105,15 @@ public class Main {
             } else {
                 System.out.println("Second phase : KO...");
             }
-        }catch(AbortException e){
-            System.out.println("Oops !");
-        }
+        }catch(AbortException e){System.out.println("Oops !");}
         System.out.println("=== End ===");
 
-      System.out.println("=== Testing for "+NBR_OF_THREADS+" threads to increment "+NBR_OF_INCREMENTS+" times on multiple registers ===");
-      reg = new Register<Integer>(0);
-      reg2 = new Register<Integer>(0);
-      myThreads = new ArrayList<Thread>();
-      System.out.println("Initializing all threads");
-      for(int i=0; i<NBR_OF_THREADS; i++){
+        System.out.println("=== Testing for "+NBR_OF_THREADS+" threads to increment "+NBR_OF_INCREMENTS+" times on multiple registers ===");
+        reg = new Register<Integer>(0);
+        Register<Integer> reg2 = new Register<Integer>(0);
+        myThreads = new ArrayList<Thread>();
+        System.out.println("Initializing all threads");
+        for(int i=0; i<NBR_OF_THREADS; i++){
             myThreads.add(new Thread(new OtherRunnable(reg, reg2)));
         }
         System.out.println("Launching all threads");
@@ -132,10 +132,42 @@ public class Main {
         try{
           System.out.println("All threads finished, reading value of register, expecting : "+NBR_OF_THREADS*NBR_OF_INCREMENTS+" and got : "+reg.read(t));
           System.out.println("All threads finished, reading value of register, expecting : "+NBR_OF_THREADS*NBR_OF_INCREMENTS+" and got : "+reg2.read(t));
-      }catch(Exception e){
+        }catch(Exception e){
         e.printStackTrace();
-      }
-      System.out.println("=== End ===\n\n");
+        }
+        System.out.println("=== End ===\n\n");
+
+
+        System.out.println("=== Testing register on other object : Date ===");
+        Register<Date> rdate = new Register<Date>(new Date());
+        t1 = new TL2Transaction();
+        t2 = new TL2Transaction();
+        t1.begin();
+        t2.begin();
+        try{
+            Date now = rdate.read(t1);
+            rdate.write(t2, new Date(2003, 3, 3));
+            t2.try_to_commit();
+            now.setYear(1990);
+            rdate.write(t1, now);
+            t1.try_to_commit();
+            System.out.println("First phase : KO...");
+        }catch(AbortException e){System.out.println("First phase : OK!");}
+        try{
+            t1.begin();
+            rdate.write(t1, new Date(2002, 2, 2));
+            rdate.write(t1, new Date(2003, 3, 3));
+            rdate.write(t1, new Date(2004, 4, 4));
+            t1.try_to_commit();
+            if (rdate.read(t).equals(new Date(2004, 4, 4))){
+                System.out.println("Second phase : OK!");           
+            } else {
+                System.out.println("Second phase : KO... value expected :"+ new Date(2004, 4, 4) + " but was " + rdate.read(t));
+            }
+        }catch(AbortException e){
+            System.out.println("Oops !");
+        }
+        System.out.println("=== End ===");
   }
 
     static void increment(IRegister<Integer> X){
