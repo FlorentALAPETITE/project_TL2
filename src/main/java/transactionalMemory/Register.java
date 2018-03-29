@@ -54,8 +54,7 @@ public class Register<T> implements IRegister<T>, Comparable<IRegister>{
 		lock_.lock();
 	}
 
-	public void releaseLock(int hashCode) throws AbortException{
-		//if (this.locker == hashCode){
+	public void releaseLock(int hashCode) throws AbortException{		
 		if (lock_.isHeldByCurrentThread()){
 			lock_.unlock();
 		} else {
