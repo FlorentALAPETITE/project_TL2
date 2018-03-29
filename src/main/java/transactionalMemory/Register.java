@@ -34,7 +34,7 @@ public class Register<T> implements IRegister<T>, Comparable<IRegister>{
 
 		localCopy = t.getLocalRegisterCopy(this.hashCode());	
 
-		if(localCopy.getDate() > t.getClockValue()){
+		if(localCopy.getDate() >= t.getBirthDate()){
 			throw new AbortException("Abort mission");
 		}
 		else{

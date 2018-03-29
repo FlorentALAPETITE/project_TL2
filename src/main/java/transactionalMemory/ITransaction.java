@@ -10,4 +10,5 @@ public interface ITransaction {
 	public void updateLocalRegisterCopy(int hashCode, Object v);
 	public TL2Transaction.LocalCopy getLocalRegisterCopy(int registerHashCode);
 	public Integer getClockValue();
+	public Integer getBirthDate();
 }

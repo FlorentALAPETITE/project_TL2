@@ -112,4 +112,7 @@ public class TL2Transaction implements ITransaction {
 	public boolean isInWrittenSet(int hashCode){
 		return this.lwst_.contains(hashCode);
 	}
+	public Integer getBirthDate(){
+		return this.birthDate_;
+	}
 }
