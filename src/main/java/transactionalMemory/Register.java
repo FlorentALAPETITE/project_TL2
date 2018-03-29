@@ -12,8 +12,6 @@ public class Register<T> implements IRegister<T>, Comparable<IRegister>{
 
 	private volatile Integer date_;
 
-	//private int locker;
-
 	public Register(T value){
 		lock_ = new ReentrantLock(true);
 		value_= value;
@@ -21,9 +19,9 @@ public class Register<T> implements IRegister<T>, Comparable<IRegister>{
 	}
 
 	public T read(ITransaction t) throws AbortException{
-		/*if(lock_.isLocked()){
+		if(lock_.isLocked()){
 			throw new AbortException("Abort mission");
-		}*/
+		}
 		TL2Transaction.LocalCopy localCopy = t.getLocalRegisterCopy(this.hashCode());
 
 		if (localCopy != null){
@@ -44,13 +42,9 @@ public class Register<T> implements IRegister<T>, Comparable<IRegister>{
 	}
 
 	public void write(ITransaction t, T v) throws AbortException{
-		/*if(lock_.isLocked()){
-			throw new AbortException("Abort mission");
-		}*/
 		if (!t.isInWrittenSet(this.hashCode())){
 			t.addInWrittenSet(this,v);
 		}
-		t.updateLocalRegisterCopy(this.hashCode(), v);
 	}
 
 	public void acquireLock(int hashCode) throws AbortException{
@@ -58,7 +52,6 @@ public class Register<T> implements IRegister<T>, Comparable<IRegister>{
 			throw new AbortException("Abort mission");
 		}
 		lock_.lock();
-		//this.locker = hashCode;
 	}
 
 	public void releaseLock(int hashCode) throws AbortException{
@@ -88,9 +81,4 @@ public class Register<T> implements IRegister<T>, Comparable<IRegister>{
 		if (o==null){throw new NullPointerException();}
 		return this.hashCode() - o.hashCode();
 	}
-
-	// @Override // from Object
-	// public int hashCode(){
-
-	// }
 }
