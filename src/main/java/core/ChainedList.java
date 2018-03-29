@@ -39,6 +39,7 @@ public class ChainedList{
 
   public int getValue(){
     ITransaction t = new TL2Transaction();
+    t.begin();
     try{
       return value.read(t);
     }catch(AbortException e){
@@ -49,6 +50,7 @@ public class ChainedList{
 
   public ChainedList getNext(){
     ITransaction t = new TL2Transaction();
+    t.begin();
     try{
       return next.read(t);
     }catch(AbortException e){

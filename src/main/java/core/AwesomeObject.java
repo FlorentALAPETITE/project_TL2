@@ -11,6 +11,7 @@ public class AwesomeObject{
 
 	public ChainedList getListRoot(){
 		ITransaction t = new TL2Transaction();
+      	t.begin();
 	    try{
 	      return root.read(t);
 	    }catch(AbortException e){

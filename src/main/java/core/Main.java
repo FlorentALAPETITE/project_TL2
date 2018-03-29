@@ -16,6 +16,7 @@ public class Main {
     	System.out.println("=== Testing increment for an Integer Register ===");
    		Register<Integer> reg = new Register<Integer>(0);
    		ITransaction t = new TL2Transaction();
+      t.begin();
    		try{
    			System.out.println("Value of reg : "+reg.read(t)+" expecting 0");
    		}catch(AbortException e){
@@ -24,6 +25,7 @@ public class Main {
    		System.out.println("Incrementing");
    		increment(reg);
    		t = new TL2Transaction();
+      t.begin();
    		try{
    			System.out.println("New value of reg : "+reg.read(t)+" expecting 1");
    		}catch(AbortException e){
@@ -51,6 +53,7 @@ public class Main {
         	e.printStackTrace();
         }
         t = new TL2Transaction();
+        t.begin();
         try{
         	System.out.println("All threads finished, reading value of register, expecting : "+NBR_OF_THREADS*NBR_OF_INCREMENTS+" and got : "+reg.read(t));
         	System.out.println((reg.read(t) == NBR_OF_THREADS*NBR_OF_INCREMENTS ? "Nice !" : "Well .. I guess something went wrong ..."));
@@ -100,6 +103,7 @@ public class Main {
             reg.write(t1, 3);
             reg.write(t1, 4);
             t1.try_to_commit();
+            t.begin();
             if (reg.read(t) == 4){
                 System.out.println("Second phase : OK!");           
             } else {
@@ -129,6 +133,7 @@ public class Main {
           e.printStackTrace();
         }
         t = new TL2Transaction();
+        t.begin();
         try{
           System.out.println("All threads finished, reading value of register, expecting : "+NBR_OF_THREADS*NBR_OF_INCREMENTS+" and got : "+reg.read(t));
           System.out.println("All threads finished, reading value of register, expecting : "+NBR_OF_THREADS*NBR_OF_INCREMENTS+" and got : "+reg2.read(t));
@@ -159,6 +164,7 @@ public class Main {
             rdate.write(t1, new Date(2003, 3, 3));
             rdate.write(t1, new Date(2004, 4, 4));
             t1.try_to_commit();
+            t.begin();
             if (rdate.read(t).equals(new Date(2004, 4, 4))){
                 System.out.println("Second phase : OK!");           
             } else {
