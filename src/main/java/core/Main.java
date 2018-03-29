@@ -167,7 +167,37 @@ public class Main {
         }catch(AbortException e){
             System.out.println("Oops !");
         }
-        System.out.println("=== End ===");
+        System.out.println("=== End ===\n\n");
+
+
+
+        System.out.println("=== TESTOBITE ===");
+        AwesomeObject sharedObject = new AwesomeObject();
+        myThreads = new ArrayList<Thread>();
+        System.out.println("Initializing all threads");
+        for(int i=0; i<NBR_OF_THREADS; i++){
+            myThreads.add(new Thread(new StillAnotherRunnable(sharedObject)));
+        }
+        System.out.println("Launching all threads");
+        for(Thread thread : myThreads){
+            thread.start();
+        }
+        System.out.println("Waiting for all threads to finish ...");
+        try{
+          for(Thread thread : myThreads){
+              thread.join();
+          }
+        }catch(InterruptedException e){
+          e.printStackTrace();
+        }
+        System.out.println("Reading all values of the list");
+
+        ChainedList l = sharedObject.getListRoot();
+        while(l != null){
+          System.out.println(l.getValue());
+          l = l.getNext();
+        }
+        System.out.println("=== End ===\n\n");
   }
 
     static void increment(IRegister<Integer> X){
@@ -227,6 +257,25 @@ public class Main {
                 }
             }
         }
+    }
+  }
+
+  private static class StillAnotherRunnable implements Runnable {
+    private AwesomeObject object;
+
+    public StillAnotherRunnable(AwesomeObject o) {
+       this.object = o;
+    }
+
+    public void run() {
+      ChainedList l = object.getListRoot();
+      l.setValue(l.getValue() + 1);
+      /*while(l != null){
+        l.setValue(l.getValue() + 1);
+        ChainedList tmp = l.getNext();
+        l.setNext(new ChainedList());
+        l = tmp;
+      }*/
     }
   }
 }

@@ -10,7 +10,7 @@ public class Register<T> implements IRegister<T>, Comparable<IRegister>{
 
 	private ReentrantLock lock_;
 
-	private Integer date_;
+	private volatile Integer date_;
 
 	private int locker;
 
