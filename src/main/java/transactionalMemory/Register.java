@@ -21,9 +21,9 @@ public class Register<T> implements IRegister<T>, Comparable<IRegister>{
 	}
 
 	public T read(ITransaction t) throws AbortException{
-		if(lock_.isLocked()){
+		/*if(lock_.isLocked()){
 			throw new AbortException("Abort mission");
-		}
+		}*/
 		TL2Transaction.LocalCopy localCopy = t.getLocalRegisterCopy(this.hashCode());
 
 		if (localCopy != null){
