@@ -44,9 +44,9 @@ public class Register<T> implements IRegister<T>, Comparable<IRegister>{
 	}
 
 	public void write(ITransaction t, T v) throws AbortException{
-		if(lock_.isLocked()){
+		/*if(lock_.isLocked()){
 			throw new AbortException("Abort mission");
-		}
+		}*/
 		if (!t.isInWrittenSet(this.hashCode())){
 			t.addInWrittenSet(this,v);
 		}
@@ -62,7 +62,8 @@ public class Register<T> implements IRegister<T>, Comparable<IRegister>{
 	}
 
 	public void releaseLock(int hashCode) throws AbortException{
-		if (this.locker == hashCode){
+		//if (this.locker == hashCode){
+		if (lock_.isHeldByCurrentThread()){
 			lock_.unlock();
 		} else {
 			throw new AbortException("Well tried");
