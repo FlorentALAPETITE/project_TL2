@@ -12,10 +12,10 @@ public class Register<T> implements IRegister<T>, Comparable<IRegister>{
 
 	private volatile Integer date_;
 
-	private int locker;
+	//private int locker;
 
 	public Register(T value){
-		lock_ = new ReentrantLock();
+		lock_ = new ReentrantLock(true);
 		value_= value;
 		date_ = -1;
 	}
@@ -58,7 +58,7 @@ public class Register<T> implements IRegister<T>, Comparable<IRegister>{
 			throw new AbortException("Abort mission");
 		}
 		lock_.lock();
-		this.locker = hashCode;
+		//this.locker = hashCode;
 	}
 
 	public void releaseLock(int hashCode) throws AbortException{

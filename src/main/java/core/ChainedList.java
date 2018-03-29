@@ -11,14 +11,13 @@ public class ChainedList{
     next = new Register<ChainedList>(null);
   }
 
-  public void setValue(int v){
+  public void incrementValue(){
     ITransaction t = new TL2Transaction();
     while (!t.isCommited()){
       try{
         t.begin();
-        value.write(t, v);
-        t.try_to_commit();
-        System.out.println("J'ai mis "+v);
+        value.write(t, value.read(t) + 1);
+        t.try_to_commit();  
       }catch(AbortException e){
         //e.printStackTrace();
       }
@@ -31,7 +30,7 @@ public class ChainedList{
       try{
         t.begin();
         next.write(t, l);
-        t.try_to_commit();        
+        t.try_to_commit();  
       }catch(AbortException e){
         //e.printStackTrace();
       }

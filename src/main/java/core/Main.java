@@ -171,7 +171,7 @@ public class Main {
 
 
 
-        System.out.println("=== TESTOBITE ===");
+        System.out.println("=== Testing with shared Objects ===");
         AwesomeObject sharedObject = new AwesomeObject();
         myThreads = new ArrayList<Thread>();
         System.out.println("Initializing all threads");
@@ -190,14 +190,15 @@ public class Main {
         }catch(InterruptedException e){
           e.printStackTrace();
         }
+        System.out.println("All "+NBR_OF_THREADS+" threads are incrementing all existings item of the chain list, and adding one more item at the end, producing a decrementing suite from "+NBR_OF_THREADS+" to 0");
         System.out.println("Reading all values of the list");
 
         ChainedList l = sharedObject.getListRoot();
         while(l != null){
-          System.out.println(l.getValue());
+          System.out.print(l.getValue()+" ");
           l = l.getNext();
         }
-        System.out.println("=== End ===\n\n");
+        System.out.println("\n=== End ===\n\n");
   }
 
     static void increment(IRegister<Integer> X){
@@ -269,13 +270,15 @@ public class Main {
 
     public void run() {
       ChainedList l = object.getListRoot();
-      l.setValue(l.getValue() + 1);
-      /*while(l != null){
-        l.setValue(l.getValue() + 1);
+      //l.incrementValue();
+      while(l != null){
+        l.incrementValue();
         ChainedList tmp = l.getNext();
-        l.setNext(new ChainedList());
+        if(tmp == null){
+          l.setNext(new ChainedList());
+        }
         l = tmp;
-      }*/
+      }
     }
   }
 }
